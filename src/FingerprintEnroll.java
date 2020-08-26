@@ -58,7 +58,6 @@ public class FingerprintEnroll extends javax.swing.JFrame{
     byte [] left_thumb = null;
     byte [] left_index = null;
 
-    int fingers = 4;
     
     ResultSet rs = null;
     PreparedStatement pst = null;
@@ -72,7 +71,7 @@ public class FingerprintEnroll extends javax.swing.JFrame{
 
         capturer.addDataListener(new DPFPDataAdapter() {
             public void dataAcquired(final DPFPDataEvent e) {
-                log.append("The fingerprint sample was captured.\n");
+                //log.append("The fingerprint sample was captured.\n");
                 prompt.setText("Scan the same fingerprint again.");
                 process(e.getSample());
             }
@@ -125,14 +124,17 @@ public class FingerprintEnroll extends javax.swing.JFrame{
         }
     }
     
-    protected void insert(String id, byte[] digital)
+    protected void insert(String id, byte[] r_thumb, byte[] l_thumb, byte[] r_index, byte[] l_index)
     {
         PreparedStatement st;
         try
         {
-            st = cn().prepareStatement("UPDATE application SET finger=? WHERE id=?");
-            st.setBytes(1, digital);
-            st.setString(2, id);
+            st = cn().prepareStatement("UPDATE application SET finger=?, thumb=?, right_index=?, left_index=? WHERE id=?");
+            st.setBytes(1, r_thumb);
+            st.setBytes(2, l_thumb);
+            st.setBytes(3, r_index);
+            st.setBytes(4, l_index);
+            st.setString(5, id);
             st.executeUpdate();
             log.append("Succesfully inserted to database!");
         }
@@ -142,130 +144,6 @@ public class FingerprintEnroll extends javax.swing.JFrame{
         }
     }
         
-//    protected void setFinger(DPFPSample sample, int finger)
-//    {
-//        
-//         //Draw fingerprint sample image.
-//            drawPicture(convertSampleToBitmap(sample));
-//            
-//            // Process the sample and create a feature set for the enrollment purpose.
-//            DPFPFeatureSet features = extractFeatures(sample, DPFPDataPurpose.DATA_PURPOSE_ENROLLMENT);
-//            
-//        if (features != null){
-//            
-//            try
-//            {
-//                //log.append("The fingerprint feature set was created.\n");
-//                enroller.addFeatures(features);
-//            }
-//            catch (DPFPImageQualityException ex) { }
-//            finally
-//            {   
-//                
-//               
-//                if (finger == 1){
-//                    //Check if template has been created.
-//                    
-//                    
-//                    switch(enroller.getTemplateStatus())
-//                    {
-//                        case TEMPLATE_STATUS_READY: //report success and stop capturing
-//                            stopCapturing();
-//                            log.append("Right Thumb Fingerprint enrollment Done.\n");
-//                            //status.setText("");
-//                            template = enroller.getTemplate();
-//                            right_thumb = template.serialize(); //Serialize fingerprint to save it to database
-//
-//                            break;
-//                        case TEMPLATE_STATUS_FAILED: //report failure and restart capturing
-//                            enroller.clear();
-//                            stopCapturing();
-//                            log.setText("The fingerprint template is not valid. Repeat fingerprint enrollment.");
-//                            startCapturing();
-//                            break;
-//                    }
-//                }
-//                
-//                if (finger == 2){
-//                    
-//                    //Check if template has been created.
-//                    switch(enroller.getTemplateStatus())
-//                    {
-//                        case TEMPLATE_STATUS_READY: //report success and stop capturing
-//                            stopCapturing();
-//                            log.append("Right Index Fingerprint enrollment Done.\n");
-//                            //status.setText("");
-//                            template = enroller.getTemplate();
-//                            right_index = template.serialize(); //Serialize fingerprint to save it to database
-//
-//                            break;
-//                        case TEMPLATE_STATUS_FAILED: //report failure and restart capturing
-//                            enroller.clear();
-//                            stopCapturing();
-//                            log.setText("The fingerprint template is not valid. Repeat fingerprint enrollment.");
-//                            startCapturing();
-//                            break;
-//                    }
-//                        
-//                }
-//                
-//                if (finger == 3){
-//                    
-//                    //Check if template has been created.
-//                    switch(enroller.getTemplateStatus())
-//                    {
-//                        case TEMPLATE_STATUS_READY: //report success and stop capturing
-//                            stopCapturing();
-//                            log.append("Left Thumb Fingerprint enrollment Done.\n");
-//                            //status.setText("");
-//                            template = enroller.getTemplate();
-//                            left_thumb = template.serialize(); //Serialize fingerprint to save it to database
-//
-//                            break;
-//                        case TEMPLATE_STATUS_FAILED: //report failure and restart capturing
-//                            enroller.clear();
-//                            stopCapturing();
-//                            log.setText("The fingerprint template is not valid. Repeat fingerprint enrollment.");
-//                            startCapturing();
-//                            break;
-//                    }
-//                }
-//
-//                if (finger == 4){
-//                    
-//                    //Check if template has been created.
-//                    switch(enroller.getTemplateStatus())
-//                    {
-//                        case TEMPLATE_STATUS_READY: //report success and stop capturing
-//                            stopCapturing();
-//                            log.append("Left Index Fingerprint enrollment Done.\n");
-//                            //status.setText("");
-//                            template = enroller.getTemplate();
-//                            left_index = template.serialize(); //Serialize fingerprint to save it to database
-//
-//                            break;
-//                        case TEMPLATE_STATUS_FAILED: //report failure and restart capturing
-//                            enroller.clear();
-//                            stopCapturing();
-//                            log.setText("The fingerprint template is not valid. Repeat fingerprint enrollment.");
-//                            startCapturing();
-//                            break;
-//                    }
-//                }
-//                
-//                
-//                if (right_thumb != null && right_index != null && left_index != null && left_thumb != null){
-//                    log.setText("Success!!!");
-//                }
-//                
-//            }
-//            
-//        }
-//        
-//        
-//        
-//        
-//    }
     
     protected void process (DPFPSample sample)
     {
@@ -316,36 +194,12 @@ public class FingerprintEnroll extends javax.swing.JFrame{
                     stopCapturing();
                     startCapturing();
                 }else{
-                    
-                    log.setText("RThumb"+right_thumb+" RIndex"+right_index+" LThunb"+left_thumb+" LIndex"+left_index);
-                }
-                
-                //log.append("Fingerprint enrollment FINISHED.\n");
-                //status.setText("");
-                
+                    insert(user_id, right_thumb, left_thumb, right_index, left_index);
+                    //log.setText("RThumb"+right_thumb+" RIndex"+right_index+" LThunb"+left_thumb+" LIndex"+left_index);
+                }                
             }
             catch (DPFPImageQualityException ex) { }
-//            finally
-//            {                
-//                //Check if template has been created.
-//                switch(enroller.getTemplateStatus())
-//                {
-//                    case TEMPLATE_STATUS_READY: //report success and stop capturing
-//                        stopCapturing();
-//                        log.append("Fingerprint enrollment FINISHED.\n");
-//                        //status.setText("");
-//                        template = enroller.getTemplate();
-//                        byte [] b = template.serialize(); //Serialize fingerprint to save it to database
-//                        insert(user_id, b);
-//                        break;
-//                    case TEMPLATE_STATUS_FAILED: //report failure and restart capturing
-//                        enroller.clear();
-//                        stopCapturing();
-//                        log.setText("The fingerprint template is not valid. Repeat fingerprint enrollment.");
-//                        startCapturing();
-//                        break;
-//                }
-//            }
+
     }
     
     public void drawPicture(Image image) 
@@ -382,10 +236,11 @@ public class FingerprintEnroll extends javax.swing.JFrame{
             }else if (left_index == null){
                 log.append("Using the fingerprint reader, scan your Left Index.\n");
             }else{
+                stopCapturing();
+                insert(user_id, right_thumb, left_thumb, right_index, left_index);
                 log.setText("RThumb"+right_thumb+" RIndex"+right_index+" LThumb"+left_thumb+" LIndex"+left_index);
                 
-            }
-                   
+            }          
     }
     
     
