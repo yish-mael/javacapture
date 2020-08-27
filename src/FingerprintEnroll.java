@@ -443,6 +443,12 @@ public class FingerprintEnroll extends javax.swing.JFrame{
         // TODO add your handling code here:
         
         capture_btn.setEnabled(true);
+         
+        right_thumb = null;
+        right_index = null;
+        left_thumb = null;
+        left_index = null;
+        
         try 
         {
             int row = users.getSelectedRow();
